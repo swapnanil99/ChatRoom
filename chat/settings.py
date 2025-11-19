@@ -13,7 +13,9 @@ SECRET_KEY = 'django-insecure-=b^(d#dz_^traixp$(g8l$1rux@sx6zb2!jy94x2iy)0+)*p@7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["chatroom-axkr.onrender.com",  # Render er URL
+    "127.0.0.1",
+    "localhost",]
 
 
 # Application definition
