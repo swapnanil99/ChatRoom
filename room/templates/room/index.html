@@ -757,59 +757,65 @@
     }
 
     function connectSocketIfNeeded() {
-        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) return;
+    if (chatSocket && chatSocket.readyState === WebSocket.OPEN) return;
 
-        const wsUrl = "ws://" + window.location.host + "/ws/chat/";
-        connectionInfo.textContent = wsUrl;
+    // http hole ws, https hole wss
+    const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = scheme + "://" + window.location.host + "/ws/chat/";
 
-        chatSocket = new WebSocket(wsUrl);
+    connectionInfo.textContent = wsUrl;
 
-        chatSocket.onopen = () => {
-            console.log("WS OPEN");
-        };
+    chatSocket = new WebSocket(wsUrl);
 
-        chatSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === "message") {
-                const room = data.room;
-                const isSystem = data.username === "System";
-                const isSelf = data.username === currentUsername && !isSystem;
-                const isHistory = !!data.history;
+    chatSocket.onopen = () => {
+        console.log("WS OPEN");
+    };
 
-                addMessageToRoom(room, {
-                    username: data.username,
-                    message: data.message,
-                    isSelf,
-                    isSystem,
-                    isHistory,
-                });
+    chatSocket.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        if (data.type === "message") {
+            const room = data.room;
+            const isSystem = data.username === "System";
+            const isSelf = data.username === currentUsername && !isSystem;
+            const isHistory = !!data.history;
+            const avatarUrl = data.avatar || "";
 
-                // sound: receive only non-history and not own
-                if (!isSelf && !isHistory) {
-                    try { receiveSound.currentTime = 0; receiveSound.play(); } catch (err) {}
-                }
-            } else if (data.type === "users_update") {
-                updateOnlineForRoom(data.room, data.users || []);
-            } else if (data.type === "typing") {
-                const room = data.room;
-                ensureRoom(room);
-                if (!rooms[room].typingUsers) rooms[room].typingUsers = new Set();
-                if (data.username === currentUsername) return;
-                if (data.is_typing) {
-                    rooms[room].typingUsers.add(data.username);
-                } else {
-                    rooms[room].typingUsers.delete(data.username);
-                }
-                if (room === activeRoom) {
-                    updateTypingIndicator();
-                }
+            addMessageToRoom(room, {
+                username: data.username,
+                message: data.message,
+                isSelf,
+                isSystem,
+                isHistory,
+                avatarUrl,
+            });
+
+            if (!isSelf && !isHistory) {
+                try { receiveSound.currentTime = 0; receiveSound.play(); } catch (err) {}
             }
-        };
+        } else if (data.type === "users_update") {
+            updateOnlineForRoom(data.room, data.users || []);
+        } else if (data.type === "typing") {
+            const room = data.room;
+            ensureRoom(room);
+            if (!rooms[room].typingUsers) rooms[room].typingUsers = new Set();
+            if (data.username === currentUsername) return;
+            if (data.is_typing) {
+                rooms[room].typingUsers.add(data.username);
+            } else {
+                rooms[room].typingUsers.delete(data.username);
+            }
+            if (room === activeRoom) {
+                updateTypingIndicator();
+            }
+        }
+    };
 
-        chatSocket.onclose = () => {
-            console.log("WS CLOSE");
-        };
-    }
+    chatSocket.onclose = () => {
+        console.log("WS CLOSE");
+    };
+}
+
+
 
     // stylish modal -> set username
     function finishNameSetup() {
