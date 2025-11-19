@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}ChatRoom Admin{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+    <div class="cr-branding">
+        <div class="cr-brand-title">ChatRoom Control Center</div>
+        <div class="cr-brand-subtitle">Monitor rooms, users & activity</div>
+    </div>
+{% endblock %}
+
+{% block nav-global %}
+    <div class="cr-nav-actions">
+        <a href="/" target="_blank" rel="noopener">View site</a>
+        <a href="https://chatroom-axkr.onrender.com" target="_blank" rel="noopener">Production</a>
+    </div>
+{% endblock %}
+
