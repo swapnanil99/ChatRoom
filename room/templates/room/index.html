@@ -217,7 +217,7 @@
             .chat-window { height: calc(55vh); }
         }
 
-        /* message + avatar + ticks */
+        /* message + avatar  */
         .message {
             margin-bottom: 8px;
             padding: 6px 8px;
@@ -533,7 +533,7 @@
 <script>
     let chatSocket = null;
     let currentUsername = "";
-    let rooms = {};      // room -> {messages: [], users: [], typingUsers: Set}
+    let rooms = {};     
     let activeRoom = null;
 
     const chatWindow = document.getElementById("chatWindow");
@@ -589,7 +589,7 @@
 
     function renderTicks(m) {
         if (!m.isSelf || m.isSystem) return "";
-        const status = m.status || "delivered"; // future: sent / delivered / seen
+        const status = m.status || "delivered"; // sent / delivered / seen
         let symbol = "✓✓";
         let cls = "ticks";
         if (status === "sent") {
@@ -759,7 +759,7 @@
     function connectSocketIfNeeded() {
     if (chatSocket && chatSocket.readyState === WebSocket.OPEN) return;
 
-    // http hole ws, https hole wss
+    // http as ws, https as wss
     const scheme = window.location.protocol === "https:" ? "wss" : "ws";
     const wsUrl = scheme + "://" + window.location.host + "/ws/chat/";
 
@@ -937,7 +937,7 @@
         }, 1000);
     });
 
-    // theme toggle
+    // theme 
     themeToggle.onclick = () => {
         const body = document.body;
         const isLight = body.classList.toggle("light-theme");
