@@ -1,4 +1,6 @@
 import os
+import socket
+from urllib.parse import urlparse
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -60,8 +62,25 @@ ASGI_APPLICATION = 'chat.asgi.application'
 # Channels / WebSocket layer
 REDIS_URL = os.environ.get("REDIS_URL")
 
-if REDIS_URL:
-    # Production / when Redis is available
+def _redis_is_reachable(redis_url: str) -> bool:
+    """
+    Avoid crashing the deployment when Render injects an unreachable Redis URL
+    (e.g. localhost). We optimistically try to open a socket; if it fails we
+    fall back to the in-memory layer so the app can still boot.
+    """
+    if not redis_url:
+        return False
+
+    try:
+        parsed = urlparse(redis_url)
+        host = parsed.hostname or "localhost"
+        port = parsed.port or 6379
+        with socket.create_connection((host, port), timeout=1.5):
+            return True
+    except OSError:
+        return False
+
+if _redis_is_reachable(REDIS_URL):
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -71,9 +90,6 @@ if REDIS_URL:
         },
     }
 else:
-    # Local / simple deploy without Redis
-    from channels.layers import InMemoryChannelLayer
-
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
