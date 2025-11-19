@@ -18,7 +18,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        # list update when leave
+        # sob room theke ber hoyar somoy online list update
         for room in list(self.rooms):
             await self._leave_room(room)
 
@@ -26,7 +26,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         etype = data.get("type", "message")
 
-        #  JOIN any specific room
+        # 🔹 1) JOIN ekta specific room
         if etype == "join":
             room = data["room"]
             self.username = data.get("username") or self.username or "Anonymous"
@@ -37,7 +37,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             room = data["room"]
             await self._leave_room(room)
 
-        #  MESSAGE specific room
+        # 🔹 3) MESSAGE specific room
         elif etype == "message":
             room = data["room"]
             message = data.get("message", "")
@@ -72,6 +72,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 },
             )
 
+    # ============ helper ============
+
     def _group_name(self, room: str) -> str:
         return f"chat_{room}"
 
@@ -82,7 +84,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.rooms.add(room)
         await self.channel_layer.group_add(self._group_name(room), self.channel_name)
 
-        # send history to client only
+        # 🔹 first: send history to ei client only
         history = await self.get_last_messages(room, limit=30)
         for msg in history:
             await self.send(text_data=json.dumps({
@@ -105,7 +107,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
-        # system join message
+        # 🔹 system join message
         await self.channel_layer.group_send(
             self._group_name(room),
             {
@@ -150,6 +152,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
+    # ============ group_send handlers ============
+
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             "type": "message",
@@ -183,6 +187,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "is_typing": event["is_typing"],
         }))
 
+    # ============ DB helper ============
+
     @database_sync_to_async
     def save_message(self, room, username, message):
         return ChatMessage.objects.create(
@@ -194,4 +200,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_last_messages(self, room, limit=30):
         qs = ChatMessage.objects.filter(room_name=room).order_by("-created_at")[:limit]
-        return list(qs[::-1])  # old -> new
+        return list(qs[::-1])  

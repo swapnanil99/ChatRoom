@@ -7,7 +7,7 @@ class ChatMessage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["created_at"]  # by default purono theke notun
+        ordering = ["created_at"]  
 
     def __str__(self):
         return f"[{self.room_name}] {self.username}: {self.message[:30]}"

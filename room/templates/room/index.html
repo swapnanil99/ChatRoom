@@ -217,7 +217,7 @@
             .chat-window { height: calc(55vh); }
         }
 
-        /* message + avatar  */
+        /* message + avatar */
         .message {
             margin-bottom: 8px;
             padding: 6px 8px;
@@ -375,7 +375,7 @@
             color: #6b7280;
         }
 
-        /* username modal */
+        /* username */
         .modal-backdrop {
             position: fixed;
             inset: 0;
@@ -502,7 +502,7 @@
     </div>
 </div>
 
-<!-- username modal -->
+<!-- username  -->
 <div id="nameModal" class="modal-backdrop">
     <div class="modal-card">
         <div class="modal-title">Welcome 👋</div>
@@ -533,7 +533,7 @@
 <script>
     let chatSocket = null;
     let currentUsername = "";
-    let rooms = {};     
+    let rooms = {};
     let activeRoom = null;
 
     const chatWindow = document.getElementById("chatWindow");
@@ -817,7 +817,7 @@
 
 
 
-    // stylish modal -> set username
+    // stylish  -> set username
     function finishNameSetup() {
         let name = nameModalInput.value.trim();
         if (!name) name = "Guest";
