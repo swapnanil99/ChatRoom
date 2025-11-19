@@ -62,16 +62,29 @@ TEMPLATES = [
 #WSGI_APPLICATION = 'chat.wsgi.application'
 ASGI_APPLICATION = 'chat.asgi.application'
 
-REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [REDIS_URL],
-            #  "redis://127.0.0.1:6379/0"
+# Channels / WebSocket layer
+REDIS_URL = os.environ.get("REDIS_URL")
+
+if REDIS_URL:
+    # Production / when Redis is available
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
         },
-    },
-}
+    }
+else:
+    # Local / simple deploy without Redis
+    from channels.layers import InMemoryChannelLayer
+
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        }
+    }
+
 
 
 # Database
