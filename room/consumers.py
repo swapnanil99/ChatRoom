@@ -7,18 +7,18 @@ from channels.db import database_sync_to_async
 
 from .models import ChatMessage
 
-# room -> set(usernames)
+# set(usernames)
 ROOM_USERS = defaultdict(set)
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.username = None
-        self.rooms = set()  # ei socket kon kon room e ase
+        self.rooms = set()  
         await self.accept()
 
     async def disconnect(self, close_code):
-        # sob room theke ber hoyar somoy online list update
+        # list update when leave
         for room in list(self.rooms):
             await self._leave_room(room)
 
@@ -26,24 +26,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         etype = data.get("type", "message")
 
-        # 🔹 1) JOIN ekta specific room
+        #  JOIN any specific room
         if etype == "join":
             room = data["room"]
             self.username = data.get("username") or self.username or "Anonymous"
             await self._join_room(room)
 
-        # 🔹 2) LEAVE specific room
+        # LEAVE specific room
         elif etype == "leave_room":
             room = data["room"]
             await self._leave_room(room)
 
-        # 🔹 3) MESSAGE specific room
+        #  MESSAGE specific room
         elif etype == "message":
             room = data["room"]
             message = data.get("message", "")
             username = data.get("username", self.username or "Anonymous")
 
-            # DB te save
+            # DB save
             await self.save_message(room, username, message)
 
             await self.channel_layer.group_send(
@@ -56,7 +56,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 },
             )
 
-        # 🔹 4) TYPING specific room
+        # TYPING specific room
         elif etype == "typing":
             room = data["room"]
             is_typing = data.get("is_typing", False)
@@ -72,8 +72,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 },
             )
 
-    # ============ helper ============
-
     def _group_name(self, room: str) -> str:
         return f"chat_{room}"
 
@@ -84,7 +82,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.rooms.add(room)
         await self.channel_layer.group_add(self._group_name(room), self.channel_name)
 
-        # 🔹 first: send history to ei client only
+        # send history to client only
         history = await self.get_last_messages(room, limit=30)
         for msg in history:
             await self.send(text_data=json.dumps({
@@ -95,7 +93,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "history": True,
             }))
 
-        # 🔹 then online users update
+        # online users update
         ROOM_USERS[room].add(self.username)
 
         await self.channel_layer.group_send(
@@ -107,7 +105,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
-        # 🔹 system join message
+        # system join message
         await self.channel_layer.group_send(
             self._group_name(room),
             {
@@ -152,8 +150,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
-    # ============ group_send handlers ============
-
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             "type": "message",
@@ -186,8 +182,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "username": event["username"],
             "is_typing": event["is_typing"],
         }))
-
-    # ============ DB helper ============
 
     @database_sync_to_async
     def save_message(self, room, username, message):
